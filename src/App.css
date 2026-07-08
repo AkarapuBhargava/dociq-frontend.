@@ -1,0 +1,26 @@
+.upload-container {
+  width: 500px;
+  margin: 60px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.upload-container h2 {
+  margin-bottom: 20px;
+}
+
+.upload-container input {
+  margin-bottom: 20px;
+}
+
+.upload-container ul {
+  padding-left: 20px;
+}
+
+.upload-container button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
