@@ -9,8 +9,11 @@ import SearchBar from "../components/common/SearchBar";
 import ApprovedTable from "../components/approved/ApprovedTable";
 import ApprovedDetails from "../components/approved/ApprovedDetails";
 
-import { uploadDocuments, getDocuments } from "../services/documentService";
-
+import {
+  uploadDocuments,
+  getApprovedDocuments,
+  getDashboardSummary,
+} from "../services/documentService";
 export default function ApprovedFiles() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -43,53 +46,56 @@ export default function ApprovedFiles() {
     loadDashboard();
   }, []);
 
+  // async function loadDashboard() {
+  //   try {
+  //     const [summary, response] = await Promise.all([
+  //       getDashboardSummary(),
+  //       getApprovedDocuments(),
+  //     ]);
+
+  //     const documents =
+  //       response.documents || response.files || response.data || response;
+
+  //     setFiles(documents);
+
+  //     setStats({
+  //       total: summary.total,
+  //       approved: summary.approved,
+  //       pending: summary.pending,
+  //       rejected: summary.rejected,
+  //     });
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
+
   async function loadDashboard() {
     try {
-      // const docs = await getDocuments();
+      const [summary, response] = await Promise.all([
+        getDashboardSummary(),
+        getApprovedDocuments(),
+      ]);
 
-      // const documents = docs.files || docs;
-      const docs = await getDocuments();
-
-      let documents = [];
-
-      if (Array.isArray(docs)) {
-        documents = docs;
-      } else if (Array.isArray(docs.documents)) {
-        documents = docs.documents;
-      } else if (Array.isArray(docs.files)) {
-        documents = docs.files;
-      } else {
-        console.log("Unexpected API response:", docs);
-      }
-
-      console.log(documents);
+      const documents =
+        response.documents || response.files || response.data || response;
 
       setFiles(documents);
 
-      const approvedFiles = documents.filter(
-        (doc) => doc.status === "Approved",
-      );
-
-      setFiles(approvedFiles);
-
-      const approved = documents.filter((d) => d.status === "Approved").length;
-
-      const pending = documents.filter((d) => d.status === "Pending").length;
-
-      const rejected = documents.filter((d) => d.status === "Rejected").length;
-
       setStats({
-        total: documents.length,
-        approved,
-        pending,
-        rejected,
+        total: summary.overall.total,
+        approved: summary.overall.approved,
+        pending: summary.overall.pending,
+        rejected: summary.overall.rejected,
       });
 
       setBreakdown({
-        invoices: documents.filter((d) => d.type === "Invoice").length,
-        resumes: documents.filter((d) => d.type === "Resume").length,
-        panCards: documents.filter((d) => d.type === "PAN").length,
-        unknown: documents.filter((d) => d.type === "Unknown").length,
+        invoices: documents.filter((d) => d.document_type === "Invoice").length,
+
+        resumes: documents.filter((d) => d.document_type === "Resume").length,
+
+        panCards: documents.filter((d) => d.document_type === "PAN").length,
+
+        unknown: documents.filter((d) => d.document_type === "Unknown").length,
       });
     } catch (err) {
       console.log(err);

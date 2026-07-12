@@ -11,20 +11,29 @@ import {
 import StatusBadge from "../common/StatusBadge";
 import ConfidenceBar from "../common/ConfidenceBar";
 
-export default function ReviewForm({ file, onApprove, onReject, onSave }) {
+export default function ReviewForm({
+  file,
+  viewMode,
+  onApprove,
+  onReject,
+  onSave,
+}) {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
     if (file) {
-      setFormData({
-        invoiceNumber: file.invoiceNumber || "",
-        vendor: file.vendor || "",
-        amount: file.amount || "",
-        date: file.date || "",
-        remarks: file.remarks || "",
-      });
+      setFormData(file);
     }
   }, [file]);
+  const ignoreFields = [
+    "id",
+    "preview",
+    "file_url",
+    "created_at",
+    "updated_at",
+    "confidence",
+    "status",
+  ];
 
   if (!file) {
     return (
@@ -52,12 +61,20 @@ export default function ReviewForm({ file, onApprove, onReject, onSave }) {
         </div>
 
         <div className="h-[600px] bg-gray-100 flex items-center justify-center">
-          {file.preview ? (
-            <img
-              src={file.preview}
-              alt=""
-              className="max-h-full object-contain"
-            />
+          {file.file_url ? (
+            file.file_name?.toLowerCase().endsWith(".pdf") ? (
+              <iframe
+                src={file.file_url}
+                className="w-full h-full"
+                title="Document Preview"
+              />
+            ) : (
+              <img
+                src={file.file_url}
+                alt={file.file_name}
+                className="max-h-full object-contain"
+              />
+            )
           ) : (
             <FileText className="text-gray-300" size={90} />
           )}
@@ -76,7 +93,7 @@ export default function ReviewForm({ file, onApprove, onReject, onSave }) {
             <div className="flex justify-between">
               <span className="text-gray-500">File</span>
 
-              <span className="font-medium">{file.name}</span>
+              <span className="font-medium">{file.file_name}</span>
             </div>
 
             <div className="flex justify-between">
@@ -85,7 +102,7 @@ export default function ReviewForm({ file, onApprove, onReject, onSave }) {
               <span className="flex gap-2 items-center">
                 <Calendar size={15} />
 
-                {file.uploadedAt}
+                {new Date(file.created_at).toLocaleString()}
               </span>
             </div>
 
@@ -94,7 +111,7 @@ export default function ReviewForm({ file, onApprove, onReject, onSave }) {
 
               <span className="flex gap-2 items-center">
                 <User size={15} />
-                Admin
+                {file.uploaded_by || "Unknown"}
               </span>
             </div>
 
@@ -120,81 +137,41 @@ export default function ReviewForm({ file, onApprove, onReject, onSave }) {
           <h3 className="font-semibold text-lg mb-5">Extracted Fields</h3>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-500">Invoice Number</label>
+            {Object.entries(formData.extracted_data || {})
+              .filter(([key]) => !ignoreFields.includes(key))
+              .map(([key, value]) => (
+                <div key={key}>
+                  <label className="block text-sm text-gray-500 mb-2 capitalize">
+                    {key.replace(/_/g, " ")}
+                  </label>
 
-              <input
-                value={formData.invoiceNumber}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    invoiceNumber: e.target.value,
-                  })
-                }
-                className="w-full mt-2 border rounded-xl px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-500">Vendor Name</label>
-
-              <input
-                value={formData.vendor}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    vendor: e.target.value,
-                  })
-                }
-                className="w-full mt-2 border rounded-xl px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-500">Amount</label>
-
-              <input
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    amount: e.target.value,
-                  })
-                }
-                className="w-full mt-2 border rounded-xl px-4 py-3"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-500">Invoice Date</label>
-
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    date: e.target.value,
-                  })
-                }
-                className="w-full mt-2 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-500">Remarks</label>
-
-              <textarea
-                rows={4}
-                value={formData.remarks}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    remarks: e.target.value,
-                  })
-                }
-                className="w-full mt-2 border border-gray-300 rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
+                  {typeof value === "object" && value !== null ? (
+                    <textarea
+                      rows={8}
+                      readOnly={viewMode}
+                      value={JSON.stringify(value, null, 2)}
+                      className={`w-full border rounded-xl px-4 py-3 font-mono text-sm ${
+                        viewMode ? "bg-gray-100" : "bg-white"
+                      }`}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={value ?? ""}
+                      readOnly={viewMode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          [key]: e.target.value,
+                        })
+                      }
+                      className={`w-full border rounded-xl px-4 py-3 ${
+                        viewMode ? "bg-gray-100" : "bg-white"
+                      }`}
+                    />
+                  )}
+                </div>
+              ))}
           </div>
         </div>
 

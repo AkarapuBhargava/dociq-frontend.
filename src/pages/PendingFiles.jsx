@@ -11,7 +11,8 @@ import ReviewForm from "../components/pending/ReviewForm";
 
 import {
   uploadDocuments,
-  getDocuments,
+  getPendingDocuments,
+  getDashboardSummary,
   approveDocument,
   rejectDocument,
 } from "../services/documentService";
@@ -43,56 +44,62 @@ export default function PendingFiles() {
   const [dragActive, setDragActive] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [viewMode, setViewMode] = useState(true);
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
+  // async function loadDashboard() {
+  //   try {
+  //     const [summary, response] = await Promise.all([
+  //       getDashboardSummary(),
+  //       getPendingDocuments(),
+  //     ]);
+
+  //     const documents =
+  //       response.documents || response.files || response.data || response;
+
+  //     setFiles(documents);
+
+  //     setStats({
+  //       total: summary.overall.total,
+  //       approved: summary.overall.approved,
+  //       pending: summary.overall.pending,
+  //       rejected: summary.overall.rejected,
+  //     });
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
+
   async function loadDashboard() {
     try {
-      // const docs = await getDocuments();
+      const [summary, response] = await Promise.all([
+        getDashboardSummary(),
+        getPendingDocuments(),
+      ]);
 
-      // const documents = docs.files || docs;
-
-      const docs = await getDocuments();
-
-      let documents = [];
-
-      if (Array.isArray(docs)) {
-        documents = docs;
-      } else if (Array.isArray(docs.documents)) {
-        documents = docs.documents;
-      } else if (Array.isArray(docs.files)) {
-        documents = docs.files;
-      } else {
-        console.log("Unexpected API response:", docs);
-      }
-
-      console.log(documents);
+      const documents =
+        response.documents || response.files || response.data || response;
 
       setFiles(documents);
-      const pendingFiles = documents.filter((doc) => doc.status === "Pending");
-
-      setFiles(pendingFiles);
-
-      const approved = documents.filter((d) => d.status === "Approved").length;
-
-      const pending = documents.filter((d) => d.status === "Pending").length;
-
-      const rejected = documents.filter((d) => d.status === "Rejected").length;
 
       setStats({
-        total: documents.length,
-        approved,
-        pending,
-        rejected,
+        total: summary.overall.total,
+        approved: summary.overall.approved,
+        pending: summary.overall.pending,
+        rejected: summary.overall.rejected,
       });
 
       setBreakdown({
-        invoices: documents.filter((d) => d.type === "Invoice").length,
-        resumes: documents.filter((d) => d.type === "Resume").length,
-        panCards: documents.filter((d) => d.type === "PAN").length,
-        unknown: documents.filter((d) => d.type === "Unknown").length,
+        invoices: documents.filter((d) => d.document_type === "Invoice").length,
+
+        resumes: documents.filter((d) => d.document_type === "Resume").length,
+
+        panCards: documents.filter((d) => d.document_type === "PAN").length,
+
+        unknown: documents.filter((d) => d.document_type === "Unknown").length,
       });
     } catch (err) {
       console.log(err);
@@ -210,10 +217,12 @@ export default function PendingFiles() {
         setSearch={setSearch}
         selectedFile={selectedFile}
         setSelectedFile={setSelectedFile}
+        setViewMode={setViewMode}
       />
 
       <ReviewForm
         file={selectedFile}
+        viewMode={viewMode}
         onApprove={handleApprove}
         onReject={handleReject}
         onSave={handleSave}

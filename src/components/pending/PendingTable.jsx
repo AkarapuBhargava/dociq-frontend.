@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Eye, FileText, Clock3, Search } from "lucide-react";
+import { Eye, Pencil, FileText, Clock3, Search } from "lucide-react";
 
 import StatusBadge from "../common/StatusBadge";
 import ConfidenceBar from "../common/ConfidenceBar";
@@ -10,6 +10,7 @@ export default function PendingTable({
   setSearch,
   selectedFile,
   setSelectedFile,
+  setViewMode,
 }) {
   const pendingFiles = useMemo(() => {
     return files.filter((item) => {
@@ -109,9 +110,33 @@ export default function PendingTable({
                 </td>
 
                 <td className="px-6 py-5">
-                  <button className="w-10 h-10 rounded-xl border hover:bg-yellow-50 flex items-center justify-center">
-                    <Eye size={18} />
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    {/* View Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile(file);
+                        setViewMode(true);
+                      }}
+                      className="w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center transition"
+                      title="View"
+                    >
+                      <Eye size={18} className="text-slate-600" />
+                    </button>
+
+                    {/* Edit Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile(file);
+                        setViewMode(false);
+                      }}
+                      className="w-10 h-10 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition"
+                      title="Edit"
+                    >
+                      <Pencil size={18} className="text-blue-600" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
