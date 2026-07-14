@@ -13,7 +13,9 @@ import {
   uploadDocuments,
   getApprovedDocuments,
   getDashboardSummary,
-} from "../services/documentService";
+  getDocumentById,
+  getAuditTrail,
+} from "../services/documentservice";
 export default function ApprovedFiles() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -41,33 +43,11 @@ export default function ApprovedFiles() {
   const [dragActive, setDragActive] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [auditTrail, setAuditTrail] = useState(null);
 
   useEffect(() => {
     loadDashboard();
   }, []);
-
-  // async function loadDashboard() {
-  //   try {
-  //     const [summary, response] = await Promise.all([
-  //       getDashboardSummary(),
-  //       getApprovedDocuments(),
-  //     ]);
-
-  //     const documents =
-  //       response.documents || response.files || response.data || response;
-
-  //     setFiles(documents);
-
-  //     setStats({
-  //       total: summary.total,
-  //       approved: summary.approved,
-  //       pending: summary.pending,
-  //       rejected: summary.rejected,
-  //     });
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }
 
   async function loadDashboard() {
     try {
@@ -146,6 +126,23 @@ export default function ApprovedFiles() {
       setLoading(false);
     }
   };
+  const handleView = async (id) => {
+    try {
+      const document = await getDocumentById(id);
+
+      setSelectedFile(document);
+
+      try {
+        const audit = await getAuditTrail(id);
+        setAuditTrail(audit);
+      } catch (err) {
+        console.log("No audit trail found");
+        setAuditTrail(null);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -184,16 +181,25 @@ export default function ApprovedFiles() {
 
       {/* Table */}
 
-      <ApprovedTable
+      {/* <ApprovedTable
         files={files}
         search={search}
         selectedFile={selectedFile}
         setSelectedFile={setSelectedFile}
+      /> */}
+      <ApprovedTable
+        files={files}
+        search={search}
+        setSearch={setSearch}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        onView={handleView}
       />
 
       {/* Details */}
 
-      <ApprovedDetails file={selectedFile} />
+      {/* <ApprovedDetails file={selectedFile} /> */}
+      <ApprovedDetails file={selectedFile} auditTrail={auditTrail} />
     </div>
   );
 }

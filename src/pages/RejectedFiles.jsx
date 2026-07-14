@@ -14,11 +14,13 @@ import {
   uploadDocuments,
   getRejectedDocuments,
   getDashboardSummary,
+  getDocumentById,
+  getAuditTrail,
 } from "../services/documentService";
 export default function RejectedFiles() {
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-
+  const [auditTrail, setAuditTrail] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     approved: 0,
@@ -143,11 +145,26 @@ export default function RejectedFiles() {
       setLoading(false);
     }
   }
+  const handleView = async (id) => {
+    try {
+      const document = await getDocumentById(id);
 
+      setSelectedFile(document);
+
+      try {
+        const audit = await getAuditTrail(id);
+        setAuditTrail(audit);
+      } catch (err) {
+        console.log("No Audit Trail");
+        setAuditTrail(null);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Upload + Stats */}
-
       <div className="grid xl:grid-cols-12 gap-6">
         <div className="xl:col-span-4">
           <UploadCard
@@ -167,9 +184,7 @@ export default function RejectedFiles() {
           <DocumentBreakdown breakdown={breakdown} stats={stats} />
         </div>
       </div>
-
       {/* Search */}
-
       <SearchBar
         search={search}
         setSearch={setSearch}
@@ -178,19 +193,17 @@ export default function RejectedFiles() {
         onRefresh={loadDashboard}
         onExport={() => {}}
       />
-
       {/* Table */}
-
       <RejectedTable
         files={files}
         search={search}
+        setSearch={setSearch}
         selectedFile={selectedFile}
         setSelectedFile={setSelectedFile}
+        onView={handleView}
       />
-
       {/* Details */}
-
-      <RejectedDetails file={selectedFile} />
+      <RejectedDetails file={selectedFile} auditTrail={auditTrail} />{" "}
     </div>
   );
 }

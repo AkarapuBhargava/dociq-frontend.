@@ -5,7 +5,7 @@ import { sendResetLink, sendOtpInstead } from "../../services/documentservice";
 import {
   FaFileAlt,
   FaEnvelope,
-//   FaCpu,
+  //   FaCpu,
   FaShieldAlt,
   FaBolt,
   FaCheckCircle,
@@ -36,7 +36,7 @@ const ForgotPassword = () => {
       await sendResetLink(data.email);
       setStatusMessage({
         type: "success",
-        text: "Reset link sent successfully to your email!",
+        text: res.message || "Reset link sent successfully to your email!",
       });
     } catch (error) {
       setStatusMessage({

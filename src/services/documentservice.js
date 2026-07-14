@@ -46,9 +46,33 @@ export const registerUser = async (data) => {
 };
 /* Forgot Password Services */
 export const sendResetLink = async (email) => {
-  const response = await axiosInstance.post("/auth/forgot-password/link", {
-    email,
-  });
+  const response = await axiosInstance.post(
+    "/users/forgot-password",
+    {
+      email,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    },
+  );
+
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await axiosInstance.post(
+    "/users/reset-password",
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
   return response.data;
 };
 
@@ -150,5 +174,33 @@ export const getMonthlyPending = async () => {
 
 export const getMonthlyRejected = async () => {
   const response = await axiosInstance.get("/documents/monthly/rejected");
+  return response.data;
+};
+
+/* Update Document */
+
+export const updateDocument = async (documentId, payload) => {
+  const response = await axiosInstance.patch(
+    `/pending/update/${documentId}`,
+    payload,
+  );
+
+  return response.data;
+};
+export const exportReport = async (period, reportType, fileFormat) => {
+  const response = await axiosInstance.get("/reports/export", {
+    params: {
+      period,
+      report_type: reportType,
+      file_format: fileFormat,
+    },
+    responseType: "blob",
+  });
+
+  return response.data;
+};
+
+export const getAuditTrail = async (id) => {
+  const response = await axiosInstance.get(`/audit/${id}`);
   return response.data;
 };

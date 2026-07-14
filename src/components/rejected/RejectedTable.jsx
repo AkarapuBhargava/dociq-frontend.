@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import Pagination from "../common/Pagination";
 import { XCircle, Eye, Search } from "lucide-react";
 
 import StatusBadge from "../common/StatusBadge";
@@ -7,8 +8,10 @@ import ConfidenceBar from "../common/ConfidenceBar";
 export default function RejectedTable({
   files = [],
   search = "",
+  setSearch,
   selectedFile,
   setSelectedFile,
+  onView,
 }) {
   const rejectedFiles = useMemo(() => {
     return files.filter((item) => {
@@ -18,6 +21,20 @@ export default function RejectedTable({
       );
     });
   }, [files, search]);
+  const rowsPerPage = 10;
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const totalPages = Math.ceil(rejectedFiles.length / rowsPerPage);
+
+  const paginatedFiles = rejectedFiles.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
@@ -74,15 +91,17 @@ export default function RejectedTable({
           </thead>
 
           <tbody>
-            {rejectedFiles.map((file, index) => (
+            {paginatedFiles.map((file, index) => (
               <tr
                 key={file.id}
-                onClick={() => setSelectedFile(file)}
+                onClick={() => onView(file.id)}
                 className={`border-t hover:bg-red-50 cursor-pointer ${
                   selectedFile?.id === file.id ? "bg-red-50" : ""
                 }`}
               >
-                <td className="px-6 py-5">{index + 1}</td>
+                <td className="px-6 py-5">
+                  {(currentPage - 1) * rowsPerPage + index + 1}
+                </td>
 
                 <td className="px-6 py-5">
                   <div className="flex gap-3">
@@ -115,7 +134,13 @@ export default function RejectedTable({
 
                 <td className="px-6 py-5">
                   <div className="flex justify-center">
-                    <button className="w-10 h-10 rounded-xl border hover:bg-red-50 flex items-center justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(file.id);
+                      }}
+                      className="w-10 h-10 rounded-xl border hover:bg-red-50 flex items-center justify-center"
+                    >
                       <Eye size={18} />
                     </button>
                   </div>
@@ -132,6 +157,14 @@ export default function RejectedTable({
             )}
           </tbody>
         </table>
+        <div className="border-t p-5">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={rejectedFiles.length}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
     </div>
   );

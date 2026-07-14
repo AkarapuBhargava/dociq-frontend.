@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import Pagination from "../common/Pagination";
+import { useMemo, useState, useEffect } from "react";
 import { Eye, Download, CheckCircle2, Search } from "lucide-react";
 import StatusBadge from "../common/StatusBadge";
 import ConfidenceBar from "../common/ConfidenceBar";
@@ -6,8 +7,10 @@ import ConfidenceBar from "../common/ConfidenceBar";
 export default function ApprovedTable({
   files = [],
   search = "",
+  setSearch,
   selectedFile,
   setSelectedFile,
+  onView,
 }) {
   const filteredFiles = useMemo(() => {
     return files.filter((item) => {
@@ -17,6 +20,18 @@ export default function ApprovedTable({
       );
     });
   }, [files, search]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+  const rowsPerPage = 10;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filteredFiles.length / rowsPerPage);
+
+  const paginatedFiles = filteredFiles.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -83,16 +98,18 @@ export default function ApprovedTable({
               </tr>
             )}
 
-            {filteredFiles.map((file, index) => (
+            {paginatedFiles.map((file, index) => (
               <tr
                 key={file.id}
+                onClick={() => onView(file.id)}
                 className={`border-t hover:bg-blue-50 transition cursor-pointer ${
                   selectedFile?.id === file.id ? "bg-blue-50" : ""
                 }`}
-                onClick={() => setSelectedFile(file)}
+                // onClick={() => setSelectedFile(file)}
               >
-                <td className="px-6 py-5">{index + 1}</td>
-
+                <td className="px-6 py-5">
+                  {(currentPage - 1) * rowsPerPage + index + 1}
+                </td>
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -130,7 +147,13 @@ export default function ApprovedTable({
 
                 <td className="px-6 py-5">
                   <div className="flex justify-center gap-3">
-                    <button className="w-10 h-10 rounded-xl border hover:bg-blue-50 flex items-center justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onView(file.id);
+                      }}
+                      className="w-10 h-10 rounded-xl border hover:bg-blue-50 flex items-center justify-center"
+                    >
                       <Eye size={18} />
                     </button>
 
@@ -155,26 +178,13 @@ export default function ApprovedTable({
           approved files
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 text-sm">
-            Previous
-          </button>
-
-          <button className="w-10 h-10 rounded-lg bg-blue-600 text-white font-semibold">
-            1
-          </button>
-
-          <button className="w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100">
-            2
-          </button>
-
-          <button className="w-10 h-10 rounded-lg border border-gray-200 hover:bg-gray-100">
-            3
-          </button>
-
-          <button className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 text-sm">
-            Next
-          </button>
+        <div className="border-t p-5">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredFiles.length}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
     </div>
